@@ -1,5 +1,5 @@
-This is 
-an initial file state  
-as Sample  file 
-format for the 
-mapping.csv
+This is something is it not?
+an initial file state  of anything is at rest
+as Sample  file we can use this
+format for the file
+mapping.csv is always  just one column of  patterns you are searching.
