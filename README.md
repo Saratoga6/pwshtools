@@ -43,7 +43,5 @@ Version
 License
 This project is released under the MIT License (LICENSE).
 
-Acknowledgments
-Thanks to the PowerShell community for providing excellent tools and resources for script development.
 
 
