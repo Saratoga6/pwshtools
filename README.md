@@ -16,7 +16,34 @@ The primary goal of this script is to help in securing documents or scripts by o
 
 ### Script Execution
 
-#### Obfuscation
+Preparation
+Create a new csv filre mapping.csv and alter the  path  you find in the script to agree with your mapping.csv
+File Structure
+mapping.csv: Initially contains the original text strings to be obfuscated. After obfuscation, 
+this file is updated with the obfuscated variables format:
+< Original String Pattern your want to obfuscate in the file no quote no commas>
+After you obfuscated your input file, this  mapping.csv  will then format: 
+"A","B"
+"Original String Pattern","Obfuscated Variable"
+
+#### Execution
 To obfuscate a file:
-```powershell
-.\ScriptName.ps1 /ob
+```powershell  use pwsh cms line or ide
+1 cmd line
+.\ScriptName.ps1 /ob   # obfiscate
+.\ScriptName.ps1 /unob  # unobfuscate
+2 ide
+or no argument
+Select text in a IDE , run  debug mode , answer options 1 to obfiscate or 2 unobfuscate,
+then paste path to the file.
+
+Version
+0.01
+
+License
+This project is released under the MIT License (LICENSE).
+
+Acknowledgments
+Thanks to the PowerShell community for providing excellent tools and resources for script development.
+
+
