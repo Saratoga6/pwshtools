@@ -28,9 +28,11 @@
     .\ScriptName.ps1
     Displays a menu for choosing between obfuscation and unobfuscation.
 
+.AUTHOR
+    Tom Burke (tom.burke@mantech)
 
 .VERSION
-    0.01
+    0.03
 #>
 param(
     [string]$operation = ""
@@ -52,7 +54,7 @@ function Read-FileContent {
     try {
         $path = $path.Trim('"')
         $content = [System.Text.StringBuilder]::new()
-        $reader = [System.IO.StreamReader]::new($path)
+        $reader = [System.IO.StreamReader]::new($path, [System.Text.Encoding]::UTF8)
         while ($null -ne ($line = $reader.ReadLine())) {
             [void]$content.AppendLine($line)
         }
@@ -81,7 +83,7 @@ function Obfuscate-Text {
         $fileNameWithoutExt = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
         $outputFilePath = Join-Path (Split-Path $filePath -Parent) ($fileNameWithoutExt + ".obfuscated.txt")
         try {
-            $content | Out-File -FilePath $outputFilePath -ErrorAction Stop
+            $content | Out-File -FilePath $outputFilePath -Encoding utf8 -ErrorAction Stop
             Write-Output $content
         } catch {
             Write-Error "Error writing obfuscated content to file: $_"
@@ -106,16 +108,22 @@ function Unobfuscate-Text {
         $reverseMapping[$mapping[$key]] = $key
     }
 
-    # Use the reverse mapping to substitute back
+    # Use regex replacement for better accuracy
     foreach ($value in $reverseMapping.Keys) {
         $content = $content -replace [regex]::Escape($value), $reverseMapping[$value]
+    }
+
+    # Additional regex patterns to ensure all edge cases are covered
+    foreach ($value in $reverseMapping.Keys) {
+        $content = $content -replace [regex]::Escape("(?<=\s|^)$value(?=\s|$)"), $reverseMapping[$value]
+        $content = $content -replace [regex]::Escape("$value$"), $reverseMapping[$value]  # For end of line cases
     }
 
     if (Test-Path $filePath -PathType Leaf) {
         $fileNameWithoutExt = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
         $outputFilePath = Join-Path (Split-Path $filePath -Parent) ($fileNameWithoutExt + ".unobfuscated.txt")
         try {
-            $content | Out-File -FilePath $outputFilePath -ErrorAction Stop
+            $content | Out-File -FilePath $outputFilePath -Encoding utf8 -ErrorAction Stop
             Write-Output $content
         } catch {
             Write-Error "Error writing unobfuscated content to file: $_"
@@ -124,6 +132,7 @@ function Unobfuscate-Text {
         Write-Error "The file path provided does not exist."
     }
 }
+
 function Show-Menu {
     Write-Host "Please select an option:"
     Write-Host "1. Obfuscate"
@@ -135,13 +144,17 @@ function Show-Menu {
 # Read the mapping file
 $mappingPath = "C:\scripts\powershell\obfuscate\mapping.csv"
 $mapping = @{}
-Import-Csv -Path $mappingPath -Header "A", "B" | ForEach-Object {
-    if (-not $_.B) {
-        $randomName = Generate-RandomString
-        $mapping[$_.A] = $randomName
-    } else {
-        $mapping[$_.A] = $_.B
+try {
+    Import-Csv -Path $mappingPath -Header "A", "B" -Encoding UTF8 | ForEach-Object {
+        if (-not $_.B) {
+            $randomName = Generate-RandomString
+            $mapping[$_.A] = $randomName
+        } else {
+            $mapping[$_.A] = $_.B
+        }
     }
+} catch {
+    Write-Error "Failed to read or process mapping file: $_"
 }
 
 # Function to check if the content of a file has changed
@@ -150,7 +163,7 @@ function HasContentChanged {
         [string]$FilePath,
         [hashtable]$NewContent
     )
-    $oldContent = Import-Csv -Path $FilePath -Header "A", "B"
+    $oldContent = Import-Csv -Path $FilePath -Header "A", "B" -Encoding UTF8
     $oldContentHash = @{}
     foreach ($row in $oldContent) {
         $oldContentHash[$row.A] = $row.B
@@ -169,7 +182,7 @@ if (HasContentChanged -FilePath $mappingPath -NewContent $mapping) {
         [PSCustomObject]@{A = $_.Key; B = $_.Value}
     }
     try {
-        $mappingData | Export-Csv -Path $mappingPath -NoTypeInformation -ErrorAction Stop
+        $mappingData | Export-Csv -Path $mappingPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
     } catch {
         Write-Error "Failed to update mapping file: $_"
     }
