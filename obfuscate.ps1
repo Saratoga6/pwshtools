@@ -28,9 +28,6 @@
     .\ScriptName.ps1
     Displays a menu for choosing between obfuscation and unobfuscation.
 
-.AUTHOR
-    Tom Burke (tom.burke@mantech)
-
 .VERSION
     0.03
 #>
